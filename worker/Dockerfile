@@ -1,18 +1,21 @@
-FROM node:10-slim
-
+#FROM node:11-slim
+FROM ubuntu:latest
 
 RUN apt-get clean && apt-get update
-RUN apt-get install -y wget gnupg
+RUN apt-get install -y wget gnupg nodejs
 
 # Get key and repo for google chrome stable
 RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
 RUN echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list
 
 RUN apt-get update
-RUN apt-get install -y git-core build-essential vim python python-pip
+#RUN apt-get install -y git-core build-essential vim python python3-pip
+RUN apt-get install -y git-core vim python python3-pip
 
 # get fonts for chrome (for screenshots etc
-RUN apt-get install -y fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-kacst ttf-freefont --no-install-recommends
+#RUN apt-get install -y fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-kacst ttf-freefont --no-install-recommends
+
+RUN apt-get install -y npm
 
 RUN npm install -g npm
 
@@ -40,75 +43,83 @@ RUN ./bootstrap.sh
 # get python 3.6.6 (build from source)
 ENV LANG C.UTF-8
 
-RUN apt-get install -y --no-install-recommends tk-dev libssl-dev
+RUN apt-get install -y --no-install-recommends tk-dev libssl-dev python3 python3-pip
 
-ENV PYTHON_VERSION 3.6.6
+#~ RUN python3 --version
 
-RUN set -ex \
-	\
-	&& wget -O python.tar.xz "https://www.python.org/ftp/python/${PYTHON_VERSION%%[a-z]*}/Python-$PYTHON_VERSION.tar.xz" \
-	&& wget -O python.tar.xz.asc "https://www.python.org/ftp/python/${PYTHON_VERSION%%[a-z]*}/Python-$PYTHON_VERSION.tar.xz.asc" \
-	&& mkdir -p /usr/src/python \
-	&& tar -xJC /usr/src/python --strip-components=1 -f python.tar.xz \
-	&& rm python.tar.xz \
-	\
-	&& cd /usr/src/python \
-	&& gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)" \
-	&& ./configure \
-		--build="$gnuArch" \
-		--enable-loadable-sqlite-extensions \
-		--enable-shared \
-		--with-system-expat \
-		--with-system-ffi \
-		--without-ensurepip \
-	&& make -j "$(nproc)" \
-	&& make install \
-	&& ldconfig \
-	\
-	&& find /usr/local -depth \
-		\( \
-			\( -type d -a \( -name test -o -name tests \) \) \
-			-o \
-			\( -type f -a \( -name '*.pyc' -o -name '*.pyo' \) \) \
-		\) -exec rm -rf '{}' + \
-	&& rm -rf /usr/src/python \
-	\
-	&& python3 --version
+ENV PYTHON_VERSION 3.8.2
+
+#~ RUN set -ex \
+	#~ \
+	#~ && wget -O python.tar.xz "https://www.python.org/ftp/python/${PYTHON_VERSION%%[a-z]*}/Python-$PYTHON_VERSION.tar.xz" \
+	#~ && wget -O python.tar.xz.asc "https://www.python.org/ftp/python/${PYTHON_VERSION%%[a-z]*}/Python-$PYTHON_VERSION.tar.xz.asc" \
+	#~ && mkdir -p /usr/src/python \
+	#~ && tar -xJC /usr/src/python --strip-components=1 -f python.tar.xz \
+	#~ && rm python.tar.xz \
+	#~ \
+	#~ && cd /usr/src/python \
+	#~ && gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)" \
+	#~ && ./configure \
+		#~ --build="$gnuArch" \
+		#~ --enable-loadable-sqlite-extensions \
+		#~ --enable-shared \
+		#~ --with-system-expat \
+		#~ --with-system-ffi \
+		#~ --without-ensurepip \
+	#~ && make -j "$(nproc)" \
+	#~ && make install \
+	#~ && ldconfig \
+	#~ \
+	#~ && find /usr/local -depth \
+		#~ \( \
+			#~ \( -type d -a \( -name test -o -name tests \) \) \
+			#~ -o \
+			#~ \( -type f -a \( -name '*.pyc' -o -name '*.pyo' \) \) \
+		#~ \) -exec rm -rf '{}' + \
+	#~ && rm -rf /usr/src/python \
+	#~ \
+	#~ && python3 --version
+
+#RUN python3 --version
 
 # make some useful symlinks that are expected to exist
-RUN cd /usr/local/bin \
-	&& ln -s idle3 idle \
-	&& ln -s pydoc3 pydoc \
-	&& ln -s python3 python \
-	&& ln -s python3-config python-config
+#~ RUN echo cd /usr/local/bin \
+	#~ && ln -s idle3 idle \
+	#~ && ln -s pydoc3 pydoc \
+	#~ && ln -s python3 python \
+	#~ && ln -s python3-config python-config
+
+#RUN python3-config
+RUN pip3 --version
 
 # if this is called "PIP_VERSION", pip explodes with "ValueError: invalid truth value '<VERSION>'"
-ENV PYTHON_PIP_VERSION 18.0
+ENV PYTHON_PIP_VERSION 20.0.2
+#18.0
 
-RUN set -ex; \
-	\
-	wget -O get-pip.py 'https://bootstrap.pypa.io/get-pip.py'; \
-	\
-	python get-pip.py \
-		--disable-pip-version-check \
-		--no-cache-dir \
-		"pip==$PYTHON_PIP_VERSION" \
-	; \
-	pip --version; \
-	\
-	find /usr/local -depth \
-		\( \
-			\( -type d -a \( -name test -o -name tests \) \) \
-			-o \
-			\( -type f -a \( -name '*.pyc' -o -name '*.pyo' \) \) \
-		\) -exec rm -rf '{}' +; \
-	rm -f get-pip.py
+#~ RUN set -ex; \
+	#~ \
+	#~ wget -O get-pip.py 'https://bootstrap.pypa.io/get-pip.py'; \
+	#~ \
+	#~ python get-pip.py \
+		#~ --disable-pip-version-check \
+		#~ --no-cache-dir \
+		#~ "pip==$PYTHON_PIP_VERSION" \
+	#~ ; \
+	#~ pip --version; \
+	#~ \
+	#~ find /usr/local -depth \
+		#~ \( \
+			#~ \( -type d -a \( -name test -o -name tests \) \) \
+			#~ -o \
+			#~ \( -type f -a \( -name '*.pyc' -o -name '*.pyo' \) \) \
+		#~ \) -exec rm -rf '{}' +; \
+	#~ rm -f get-pip.py
 
 # Continue with rest of warcworker app
 WORKDIR /usr/src/app
 COPY ./requirements.txt requirements.txt
-RUN pip install -r requirements.txt
+RUN pip3 install -r requirements.txt
 
 COPY ./worker.py worker.py
 
-CMD ["python", "worker.py"]
+CMD ["python3", "worker.py"]
